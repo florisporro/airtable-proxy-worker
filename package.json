@@ -11,7 +11,8 @@
     "prettier": "prettier --write 'src/*.js'",
     "lint": "prettier --list-different 'src/*.js'",
     "test": "npm run lint --silent && jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "test:local": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test:local": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --silent=false --verbose false"
   },
   "main": "./src/index.js",
   "author": "Karl L. Hughes <khughes.me@gmail.com>",
