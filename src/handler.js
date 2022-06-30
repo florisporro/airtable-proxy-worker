@@ -32,11 +32,17 @@ export async function handleRequest(event) {
 			// Make our request to Airtable
 			const response = await airtableRequest(config, routing, request.body);
 			const originalBody = await response.json();
-			console.log(originalBody);
 
-			// Filter our response body
+			let responseBody = { ...originalBody };
+
+			// Call the before Filter callback, if it is set
+			if (typeof routeMethod.beforeFilter === "function") {
+				responseBody = routeMethod.beforeFilter(responseBody);
+			}
+
+			// Filter our response body with whitelist & blacklist
 			const filteredResponseBody = filterResponse(
-				originalBody,
+				responseBody,
 				routeMethod.blacklist,
 				routeMethod.whitelist
 			);
