@@ -1,6 +1,6 @@
 export const getRoute = (path, routes) => {
 	const route = routes.find((route) => {
-		return path.indexOf(route.path) > -1;
+		return path.indexOf(route.path) === 0;
 	});
 
 	return route;
@@ -36,7 +36,8 @@ export const getMethod = (req, resourceId) => {
 
 export const getRouting = (req, routes) => {
 	try {
-		const { pathname } = new URL(req.url);
+		const url = new URL(req.url);
+		const { pathname, searchParams } = url;
 
 		const route = getRoute(pathname, routes);
 		const id = getResourceId(pathname, route);
@@ -46,12 +47,14 @@ export const getRouting = (req, routes) => {
 			route,
 			id,
 			method,
+			params: Object.fromEntries(searchParams),
 		};
 	} catch (error) {
 		return {
 			id: undefined,
 			method: undefined,
 			route: undefined,
+			params: undefined,
 		};
 	}
 };

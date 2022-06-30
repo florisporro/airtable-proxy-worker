@@ -9,11 +9,24 @@ const routes = [
 			read: {},
 		},
 	},
+	{
+		name: "Animals",
+		path: "/animals",
+		methods: {
+			list: {},
+			read: {},
+		},
+	},
 ];
 
 describe("getRoute()", () => {
 	it("returns undefined if route does not exist", () => {
 		let result = getRoute("/api/vehicles", routes);
+		expect(result).toBe(undefined);
+	});
+
+	it("returns undefined if only part of the path is a match", () => {
+		let result = getRoute("/api/animals", routes);
 		expect(result).toBe(undefined);
 	});
 
@@ -146,6 +159,31 @@ describe("getRouting()", () => {
 
 		it("finds the correct resource id", () => {
 			expect(result.id).toBe("12345");
+		});
+	});
+
+	describe("when adding query params", () => {
+		let req = {
+			url: "http://example.com/api/fruits/12345?view=567",
+			method: "GET",
+		};
+
+		let result = getRouting(req, routes);
+
+		it("finds the correct route", () => {
+			expect(result.route.name).toBe("Fruits");
+		});
+
+		it("finds the correct method", () => {
+			expect(result.method).toBe("read");
+		});
+
+		it("finds the correct resource id", () => {
+			expect(result.id).toBe("12345");
+		});
+
+		it("returns the query params", () => {
+			expect(result.params.view).toBe("567");
 		});
 	});
 
