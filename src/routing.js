@@ -11,7 +11,6 @@ export const getResourceId = (path, route) => {
 		const splitPath = path.split(route.path);
 
 		let resourceId = splitPath?.[1];
-		// if (!resourceId) return;
 
 		// Remove any leading slashes
 		while (resourceId.charAt(0) === "/") {
