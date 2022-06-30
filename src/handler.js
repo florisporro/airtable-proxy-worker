@@ -1,12 +1,14 @@
 import { getRouting } from "./routing.js";
 import { config, routes } from "../config.js";
 import { airtableRequest } from "./airtable.js";
+import { filterResponse } from "./filter.js";
 
 export async function handleRequest(event) {
 	try {
 		const { request } = event;
 		const routing = getRouting(request, routes);
 		const { route, method, id, params } = routing;
+		const routeMethod = route.methods[method];
 
 		// If there was no route matched in our routes table, return 404
 		if (route === undefined) {
@@ -17,7 +19,7 @@ export async function handleRequest(event) {
 		}
 
 		// If the route was a match, but the method is not allowed on that route
-		if (route.methods[method] === undefined) {
+		if (routeMethod === undefined) {
 			return new Response("Method Not Allowed", {
 				status: 405,
 				statusText: `Method "${method}" not allowed on the ${
@@ -29,7 +31,15 @@ export async function handleRequest(event) {
 		try {
 			// Make our request to Airtable
 			const response = await airtableRequest(config, routing, request.body);
-			const body = await response.body;
+			const originalBody = await response.json();
+			console.log(originalBody);
+
+			// Filter our response body
+			const filteredResponseBody = filterResponse(
+				originalBody,
+				routeMethod.blacklist,
+				routeMethod.whitelist
+			);
 
 			// Create new headers object
 			const headers = new Headers();
@@ -42,7 +52,7 @@ export async function handleRequest(event) {
 			// Override the browser TTL with our value
 			headers.set("Cache-Control", "max-age=" + config.browserTTL);
 
-			return new Response(body, {
+			return new Response(JSON.stringify(filteredResponseBody), {
 				status: response.status,
 				statusText: response.statusText,
 				headers: headers,
