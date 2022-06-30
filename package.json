@@ -3,31 +3,28 @@
   "version": "0.1.0",
   "homepage": "https://github.com/portable-cto/airtable-proxy-worker",
   "description": "A Cloudflare Worker that will proxy requests to the Airtable API",
+  "type": "module",
   "scripts": {
-    "build": "webpack -p --progress --colors",
+    "build": "webpack --progress --color",
     "prettier": "prettier --write 'src/*.js'",
     "lint": "prettier --list-different 'src/*.js'",
     "test": "npm run lint --silent && jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "test:local": "jest"
+    "test:local": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "main": "dist/worker.js",
   "author": "Karl L. Hughes <khughes.me@gmail.com>",
   "license": "MIT",
-  "dependencies": {
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.2.3"
-  },
   "devDependencies": {
-    "babel-preset-es2015": "^6.24.1",
     "coveralls": "^3.0.3",
-    "jest": "^23.6.0",
-    "prettier": "1.14.2"
+    "jest": "^28.1.1",
+    "prettier": "1.14.2",
+    "webpack": "^5.73.0",
+    "webpack-cli": "^4.10.0",
+    "wrangler": "^2.0.15"
   },
   "jest": {
     "verbose": true,
-    "transform": {
-      "^.+\\.js$": "babel-jest"
-    },
+    "transform": {},
     "globals": {
       "NODE_ENV": "test"
     },
