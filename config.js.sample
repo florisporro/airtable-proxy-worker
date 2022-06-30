@@ -1,0 +1,58 @@
+export const config = {
+	airtableApiUrl: "https://api.airtable.com",
+	airtableApiVersion: "v0",
+	airtableApiKey: "your_api_key_here",
+	// Time Cloudflare should cache the request to Airtable in seconds
+	cloudflareCacheTime: 15,
+	// Time the browser should cache the request to Airtable in seconds
+	browserTTL: 60,
+};
+
+export const routes = [
+	{
+		// Name of the resource / route.
+		name: "Fruits",
+		// What path to mount the resource on
+		path: "/api/fruits",
+		// What Airtable base the api path should map to.
+		baseId: "your_base_id",
+		// What Airtable table the api path should map to.
+		tableId: "fruits_table_id",
+
+		// Which column should be used to select the resource in the Airtable table
+		// Example: if the user makes a get request to /api/fruits/:id, but we wanted
+		// to get the resources based on not the id column but pased on a 'slug',
+		// we could set the id key to find resources using the 'slug' instead.
+
+		// However, because this method is not supported by Airtable we work around this by
+		// doing a second request, listing all records, and use the result to find the proper
+		// id of the resource we're looking for. That means a second request to Airtable.
+		id: "slug",
+		methods: {
+			// Only methods listed here are exposed on the API
+			// Available methods are list, read, create, update, delete.
+			list: {
+				// We can filter the Airtable fields that are returned in the API using either blacklist:
+				blacklist: ["isSecretAgent"],
+				// Or whitelisting (returning only the fields we want). Whitelist overrides blacklist:
+				whitelist: ["name", "sweetness", "isDelicious"],
+				// You can add a callback function to modify the responseBody directly
+				// For example to filter them by the value of a column, or to sort them.
+				beforeFilter: (responseBody) => {
+					// Filter out all records with status "None"
+					responseBody.records = responseBody.records.filter((record) => {
+						return record.fields.status !== "None";
+					});
+					return responseBody;
+				},
+			},
+			create: {
+				// In the case of create, update, the white and blacklist filters
+				// apply to both the request and the response.
+				// Example: attempting to create a fruit with isDelicious set will not work, only the
+				// name and sweetness can be set on create.
+				whitelist: ["name", "sweetness"],
+			},
+		},
+	},
+];
