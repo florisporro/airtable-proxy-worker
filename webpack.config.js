@@ -9,12 +9,11 @@ const config = {
 		hints: false,
 	},
 	output: {
-		path: __dirname + "/dist",
 		publicPath: "dist",
 		filename: "worker.js",
 	},
 };
 
-module.exports = () => {
+export default () => {
 	return config;
 };

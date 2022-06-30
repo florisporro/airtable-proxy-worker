@@ -1,7 +1,7 @@
-import { isAllowed } from "./is-allowed";
-import { getMethod } from "./get-method";
-import { getTarget } from "./get-target";
-import { config } from "../config";
+import { isAllowed } from "./is-allowed.js";
+import { getMethod } from "./get-method.js";
+import { getTarget } from "./get-target.js";
+import { config } from "../config.js";
 
 const parseJson = (obj) => {
 	try {
