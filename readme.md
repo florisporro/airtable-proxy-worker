@@ -10,13 +10,20 @@
 
 ![](https://i.imgur.com/QW0VWpG.png)
 
-
 ## Features
 
 - Keep your Airtable Base ID and API Key secret while still allowing frontend apps to access data from Airtable's API.
+- 'Patch' Airtable bases, tables and views to specific routes, essentially building your own customized API layer on Airtable.
 - Limit requests to specific methods and tables. For example, using this library, you can make sure that public users can only make `GET` requests to your tables.
-- Automatically build and push updates to your Cloudflare Worker using [Travis-CI](https://travis-ci.org/). 
+- Automatically build and push updates to your Cloudflare Worker using [Travis-CI](https://travis-ci.org/).
 
+## Changes in this fork
+
+I required a more advanced and configurable version of airtable-proxy-worker for my own purposes, to be able to accomplish the following:
+
+- Combining resources and methods from several Airtable bases into a single Cloudflare worker
+- Filtering the fields returned from Airtable to the API consumer by blacklisting, whitelisting
+- Allowing other data transformation with callback functions in the request handler, allowing for much more complex use-cases like validation
 
 ## Usage
 
@@ -27,47 +34,30 @@
 - Node and Node Package Manager ([npm](https://www.npmjs.com/get-npm)).
 - Familiarity with your computer's terminal/command line interface.
 
-### Building Locally
+### Install and test
 
-The easiest way to see this project in action is to build your Worker locally and copy/paste it into Cloudflare's UI:
+The easiest way to test this project in action is to test locally with Cloudflare's CLI wrangler:
 
 - Clone this repo: `git clone https://github.com/portable-cto/airtable-proxy-worker.git`
 - Install dependencies: `npm install`
-- Build the worker with your Airtable App/Base ID and API Key: `AIRTABLE_API_BASE_ID=appXXXXXXXXX AIRTABLE_API_KEY=keyXXXXXXXXXX npm run build`
-- Upload the built `dist/worker.js` file to [cloudflareworkers.com](https://cloudflareworkers.com/) to test your script.
+- Create a config.js file based on the config.js.sample file.
+- Run via Wrangler in development mode `npm run dev`
 
-Your Airtable's tables will be available via the table name. For example, if my Airtable base has a table name `posts`, it would be available at `https://tutorial.cloudflareworkers.com/posts`.
+### Deploying on Cloudflare with Wrangler
 
-In order to deploy the worker to your own personal worker, upload it via the web UI and click "Deploy".
+Wrangler is by far the easiest way to deploy:
 
-### Routing
+- Login on Cloudflare: `npx wrangler login`
+- Initiate a wrangler.toml file: `npx wrangler init`
+- Modify the file to fit your needs. For example you may want to adjust the worker name.
+- Deploy on Cloudflare: `npm run deploy`
 
-By default, the routes for each of your tables are available at `YOUR_CLOUDFLARE_DOMAIN/RESOURCE_NAME`. For example, if my custom domain is `http://api.example.com` and the table I want to access is called `users`, I would access the API at `http://api.example.com/users`.
+### Manually deploying on Cloudflare or testing on cloudflareworkers
 
-You can change this routing using a `PROXY_PREFIX` as described in the **Configuration** section below.
+You can also use Wrangler to build a worker file and you can manually upload it if you wish:
 
-### Automated Deployment
-
-You can also use Travis to automatically deploy updates to your Worker. Just add the following environment variables to your Travis settings:
-
-- `CLOUDFLARE_EMAIL`
-- `CLOUDFLARE_AUTH_KEY`
-- `CLOUDFLARE_ZONE_ID`
-- `AIRTABLE_API_BASE_ID`
-- `AIRTABLE_API_KEY`
-
-The `deploy` block in the `.travis.yml` file will automatically update your worker in Cloudflare when the `master` branch is built using the script at `scripts/deploy`.
-
-### Configuration
-
-In addition to the required `AIRTABLE_API_KEY` and `AIRTABLE_API_BASE_ID` variables, you can also set the following configuration options as ENV vars:
-
-- `AIRTABLE_API_URL` - Defaults to `https://api.airtable.com`.
-- `AIRTABLE_API_VERSION` - Defaults to `v0`.
-- `PROXY_PREFIX` - Use this if your Cloudflare worker's routes are prefixed by something before the Airtable resource name. For example, you may want to call `mycustomdomain.com/api/posts` instead of `mycustomdomain.com/posts`. In this example, you would add `api` as a prefix.
-- `ALLOWED_TARGETS` - Use this to lock down your Airtable API to specific resources and methods. For example, a stringified JSON object like this: `'[{"resource":"posts","method":"GET,PUT"},{"resource":"comments","method":"*"}]'` will allow `GET` and `PUT` requests on the `posts` resource and all request methods on the `comments` resource. Allows all methods for all resources by default.
-- `PROXY_CACHE_TIME` - Defaults to `0`. The number of seconds set on the `Cache-Control` header to use Cloudflare's caching.
-
+- Build the dist file: `npm run build`
+- Upload the built `dist/index.js` file to [cloudflareworkers.com](https://cloudflareworkers.com/) to test your script.
 
 ## Contributing
 
@@ -84,8 +74,8 @@ Also run [Prettier](https://prettier.io/) to ensure that code styling is consist
 1. Make sure tests are running and linting passes before you submit a PR.
 2. Update any relevant parts of the documentation in the `readme.md` file.
 3. Update the `changelog.md` file with any new updates, breaking changes, or important notes.
-3. Run the build process to make sure it passes too: `npm run build`.
-4. Include a link to any relevant issues in the PR on Github. If there are problems with your PR, we will discuss them in Github before merging.
+4. Run the build process to make sure it passes too: `npm run build`.
+5. Include a link to any relevant issues in the PR on Github. If there are problems with your PR, we will discuss them in Github before merging.
 
 ### Releases
 
@@ -96,9 +86,8 @@ This library uses [semantic versioning](https://semver.org/) to inform users of 
 
 This will create a new Tag in Github.
 
-
 ## License
- 
+
 The MIT License (MIT)
 
 Copyright (c) 2018 Portable CTO, LLC
