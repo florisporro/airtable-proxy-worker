@@ -8,7 +8,6 @@ export async function handleRequest(event) {
 		const { request } = event;
 		const routing = getRouting(request, routes);
 		const { route, method, id, params } = routing;
-		const routeMethod = route.methods[method];
 
 		// If there was no route matched in our routes table, return 404
 		if (route === undefined) {
@@ -17,6 +16,9 @@ export async function handleRequest(event) {
 				statusText: "That route was not found on this API",
 			});
 		}
+
+		console.log(`Received ${method} request on ${route.path}`);
+		const routeMethod = route.methods[method];
 
 		// If the route was a match, but the method is not allowed on that route
 		if (routeMethod === undefined) {
@@ -31,6 +33,14 @@ export async function handleRequest(event) {
 		try {
 			// Make our request to Airtable
 			const response = await airtableRequest(config, routing, request.body);
+
+			if (response === undefined) {
+				return new Response("Not found", {
+					status: 404,
+					statusText: "That resource was not found",
+				});
+			}
+
 			const originalBody = await response.json();
 
 			let responseBody = { ...originalBody };
