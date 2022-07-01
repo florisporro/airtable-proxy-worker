@@ -3,6 +3,8 @@ export const config = {
 	airtableApiVersion: "v0",
 	airtableApiKey: "your_api_key_here",
 	// Time Cloudflare should cache the request to Airtable in seconds
+	// Note: for Cloudflare to cache the requests to Airtable the worker
+	// MUST be deployed on a custom domain. It will NOT work on workers.dev.
 	cloudflareCacheTime: 15,
 	// Time the browser should cache the request to Airtable in seconds
 	browserTTL: 60,
