@@ -70,16 +70,18 @@ export const airtableRequest = async (config, routing, requestBody) => {
 		cacheEverything: true,
 	};
 
-	const response = fetch(url, {
+	const fetchOptions = {
 		// Only if our config cacheTime property is set, pass the cf object
 		cf: config.cloudflareCacheTime !== undefined ? cf : undefined,
 		headers: {
 			Authorization: `Bearer ${config.airtableApiKey}`,
 			"Content-type": "application/json",
 		},
-		method: methods[routing.route.method],
-		body: requestBody,
-	});
+		method: methods[routing.method],
+		body: requestBody ? requestBody : undefined,
+	};
+
+	const response = fetch(url, fetchOptions);
 
 	return response;
 };
