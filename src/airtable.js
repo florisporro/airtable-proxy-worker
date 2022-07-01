@@ -26,7 +26,40 @@ export const getRequestUrl = (config, routing) => {
 	return url.join("");
 };
 
+const findId = async (config, routing) => {
+	if (routing.route.method === "list") return;
+	if (routing.route.method === "create") return;
+	if (routing.id === undefined) return;
+
+	// If the route has an idField defined, and the method is not 'list' or 'create'
+	// we'll need to find the Airtable ID by doing a list request with a filter.
+	// To do this we make use of the filterByFormula query param and return the first result.
+	const newRouting = {
+		route: routing.route,
+		method: "list",
+		params: {
+			filterByFormula: `{${routing.route.idField}}="${routing.id}"`,
+		},
+	};
+
+	try {
+		const response = await airtableRequest(config, newRouting);
+		const originalBody = await response.json();
+		return originalBody?.records?.[0]?.id;
+	} catch (error) {
+		// console.error(error);
+		return undefined;
+	}
+};
+
 export const airtableRequest = async (config, routing, requestBody) => {
+	// If the route has an idField defined, determine the Airtable ID
+	if (routing.route.idField !== undefined && routing.id !== undefined) {
+		const id = await findId(config, routing);
+		if (!id) return undefined;
+		routing.id = id;
+	}
+
 	const url = getRequestUrl(config, routing);
 	console.log(`Making Airtable request to URL ${url}`);
 

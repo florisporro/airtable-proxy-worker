@@ -27,7 +27,7 @@ export const routes = [
 		// However, because this method is not supported by Airtable we work around this by
 		// doing a second request, listing all records, and use the result to find the proper
 		// id of the resource we're looking for. That means a second request to Airtable.
-		id: "slug",
+		idField: "slug",
 		methods: {
 			// Only methods listed here are exposed on the API
 			// Available methods are list, read, create, update, delete.
