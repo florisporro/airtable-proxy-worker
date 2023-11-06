@@ -33,7 +33,7 @@ const findId = async (config, routing) => {
 
 	// If the route has an idField defined, and the method is not 'list' or 'create'
 	// we'll need to find the Airtable ID by doing a list request with a filter.
-	// To do this we make use of the filterByFormula query param and return the first result.
+	// To do this we make use of the filterByFormula query param.
 	const newRouting = {
 		route: routing.route,
 		method: "list",
@@ -43,9 +43,8 @@ const findId = async (config, routing) => {
 	};
 
 	try {
-		const response = await airtableRequest(config, newRouting);
-		const originalBody = await response.json();
-		return originalBody?.records?.[0]?.id;
+		const { json } = await airtableRequest(config, newRouting);
+		return json.records[0].id;
 	} catch (error) {
 		// console.error(error);
 		return undefined;
@@ -53,11 +52,20 @@ const findId = async (config, routing) => {
 };
 
 export const airtableRequest = async (config, routing, requestBody) => {
-	// If the route has an idField defined, determine the Airtable ID
-	if (routing.route.idField !== undefined && routing.id !== undefined) {
+	// In-case of a create, update or delete we absolutely must know the Airtable record ID,
+	// and the only way to get it is to first do a 'list' fetch with the appropriate filter set.
+	if (routing.route.idField !== undefined && routing.id !== undefined && routing.method !== "read") {
 		const id = await findId(config, routing);
 		if (!id) return undefined;
 		routing.id = id;
+	}
+
+	// On a read request however, it's enough to do a list request with the appropriate filter set
+	if (routing.route.idField !== undefined && routing.id !== undefined && routing.method === "read") {
+		routing.params = {
+			filterByFormula: `{${routing.route.idField}}="${routing.id}"`,
+		}
+		routing.id = undefined;
 	}
 
 	const url = getRequestUrl(config, routing);
@@ -81,7 +89,14 @@ export const airtableRequest = async (config, routing, requestBody) => {
 		body: requestBody ? requestBody : undefined,
 	};
 
-	const response = fetch(url, fetchOptions);
+	const response = await fetch(url, fetchOptions);
+	const json = await response.json();
 
-	return response;
+	if (routing.method === "read") {
+		if (json.records.length === 0) {
+			return { response: undefined, json: undefined };
+		}
+	}
+
+	return { response, json };
 };

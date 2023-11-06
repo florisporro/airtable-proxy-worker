@@ -2,6 +2,7 @@ import { getRouting } from "./routing.js";
 import { config, routes } from "../config.js";
 import { airtableRequest } from "./airtable.js";
 import { filterResponse } from "./filter.js";
+import { encryptResponse } from "./encrypt.js";
 
 export async function handleRequest(event) {
 	try {
@@ -24,15 +25,14 @@ export async function handleRequest(event) {
 		if (routeMethod === undefined) {
 			return new Response("Method Not Allowed", {
 				status: 405,
-				statusText: `Method "${method}" not allowed on the ${
-					route.name
-				} resource`,
+				statusText: `Method "${method}" not allowed on the ${route.name
+					} resource`,
 			});
 		}
 
 		try {
 			// Make our request to Airtable
-			const response = await airtableRequest(config, routing, request.body);
+			const { response, json } = await airtableRequest(config, routing, request.body);
 
 			if (response === undefined) {
 				return new Response("Not found", {
@@ -41,9 +41,7 @@ export async function handleRequest(event) {
 				});
 			}
 
-			const originalBody = await response.json();
-
-			let responseBody = { ...originalBody };
+			let responseBody = { ...json };
 
 			// Call the before Filter callback, if it is set
 			if (typeof routeMethod.beforeFilter === "function") {
@@ -57,6 +55,8 @@ export async function handleRequest(event) {
 				routeMethod.whitelist
 			);
 
+			const encryptedResponseBody = await encryptResponse(responseBody, routeMethod.encryptKeyField);
+
 			// Create new headers object
 			const headers = new Headers();
 
@@ -68,7 +68,7 @@ export async function handleRequest(event) {
 			// Override the browser TTL with our value
 			headers.set("Cache-Control", "max-age=" + config.browserTTL);
 
-			return new Response(JSON.stringify(filteredResponseBody), {
+			return new Response(JSON.stringify(encryptedResponseBody), {
 				status: response.status,
 				statusText: response.statusText,
 				headers: headers,
