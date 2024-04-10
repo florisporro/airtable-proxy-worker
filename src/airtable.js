@@ -38,7 +38,7 @@ const findId = async (config, routing) => {
 		route: routing.route,
 		method: "list",
 		params: {
-			filterByFormula: `FIND("${routing.id}", {${routing.route.idField}})`,
+			filterByFormula: `{${routing.route.idField}}="${routing.id}"`,
 		},
 	};
 
@@ -63,7 +63,7 @@ export const airtableRequest = async (config, routing, requestBody) => {
 	// On a read request however, it's enough to do a list request with the appropriate filter set
 	if (routing.route.idField !== undefined && routing.id !== undefined && routing.method === "read") {
 		routing.params = {
-			filterByFormula: `{${routing.route.idField}}="${routing.id}"`,
+			filterByFormula: `FIND("${routing.id}", {${routing.route.idField}})`,
 		}
 		routing.id = undefined;
 	}
