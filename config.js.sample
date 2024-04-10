@@ -38,14 +38,31 @@ export const routes = [
 				blacklist: ["isSecretAgent"],
 				// Or whitelisting (returning only the fields we want). Whitelist overrides blacklist:
 				whitelist: ["name", "sweetness", "isDelicious"],
+
 				// You can add a callback function to modify the responseBody directly
 				// For example to filter them by the value of a column, or to sort them.
+				// Note that this happens just before the whitelist filter operation, so make sure
+				// to keep the general content structure the same otherwise the filter won't work.
 				beforeFilter: (responseBody) => {
 					// Filter out all records with status "None"
 					responseBody.records = responseBody.records.filter((record) => {
 						return record.fields.status !== "None";
 					});
 					return responseBody;
+				},
+
+				// The afterFilter callback is called immediately before the response
+				// to the user. This allows you to add or remove data arbitrarily.
+				// If you really want to go all out, this could even allow you to encrypt
+				// the response, allowing for example the option to send password-protected
+				// back to the user.
+				afterFilter: async (responseBody) => {
+					// responseBody.records = responseBody.records.map(record => {
+					// 	if (record.passwordProtected !== undefined) {
+					// 	} else {
+					// 		return record
+					// 	}
+					// })
 				},
 			},
 			create: {
