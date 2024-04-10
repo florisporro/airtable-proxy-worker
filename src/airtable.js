@@ -38,7 +38,7 @@ const findId = async (config, routing) => {
 		route: routing.route,
 		method: "list",
 		params: {
-			filterByFormula: `{${routing.route.idField}}="${routing.id}"`,
+			filterByFormula: `FIND("${routing.id}", {${routing.route.idField}})`,
 		},
 	};
 
