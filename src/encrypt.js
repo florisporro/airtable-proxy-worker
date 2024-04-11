@@ -46,28 +46,30 @@ async function encrypt(text, password) {
 export const encryptResponse = async (body, encryptKeyField) => {
 	if (!encryptKeyField) return body;
 
-	let key;
-
 	if (body.records !== undefined) {
-		// LIST
-		key = body.records[0].fields[encryptKeyField];
+		// Array of records
+		for (let [index, record] of body.records.entries()) {
+			let key = record.fields[encryptKeyField]
+			if (!key) continue;
+			const encrypted = await encrypt(JSON.stringify(record), key);
+			body.records[index] = {
+				encrypted: true,
+				cipherText: btoa(String.fromCharCode(...new Uint8Array(encrypted.cipherText))),
+				iv: btoa(String.fromCharCode(...new Uint8Array(encrypted.iv)))
+			}
+		}
+		return body
 	}
 
 	if (body.fields !== undefined) {
-		// GET
-		key = body.fields[encryptKeyField]
-	}
-
-	// If key is undefined or empty string, return body without modification
-	if (key === undefined || key === "") return body;
-
-	const encrypted = await encrypt(JSON.stringify(body), key)
-
-	return {
-		encrypted: true,
-		// cipherText: String.fromCharCode.apply(null, new Uint8Array(encrypted.cipherText)),
-		cipherText: btoa(String.fromCharCode(...new Uint8Array(encrypted.cipherText))),
-		// cipherText: encrypted.cipherText.toString('utf8'),
-		iv: btoa(String.fromCharCode(...new Uint8Array(encrypted.iv)))
+		// Single item
+		let key = body.fields[encryptKeyField]
+		if (!key) return body
+		const encrypted = await encrypt(JSON.stringify(body), key);
+		return {
+			encrypted: true,
+			cipherText: btoa(String.fromCharCode(...new Uint8Array(encrypted.cipherText))),
+			iv: btoa(String.fromCharCode(...new Uint8Array(encrypted.iv)))
+		}
 	}
 };

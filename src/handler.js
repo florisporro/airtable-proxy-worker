@@ -5,6 +5,9 @@ import { filterResponse } from "./filter.js";
 import { encryptResponse } from "./encrypt.js";
 
 export async function handleRequest(event) {
+	const headers = new Headers();
+	headers.set('Access-Control-Allow-Origin', "*")
+
 	try {
 		const { request } = event;
 		const routing = getRouting(request, routes);
@@ -15,6 +18,7 @@ export async function handleRequest(event) {
 			return new Response("Not found", {
 				status: 404,
 				statusText: "That route was not found on this API",
+				headers
 			});
 		}
 
@@ -25,6 +29,7 @@ export async function handleRequest(event) {
 		if (routeMethod === undefined) {
 			return new Response("Method Not Allowed", {
 				status: 405,
+				headers,
 				statusText: `Method "${method}" not allowed on the ${route.name
 					} resource`,
 			});
@@ -38,6 +43,7 @@ export async function handleRequest(event) {
 				return new Response("Not found", {
 					status: 404,
 					statusText: "That resource was not found",
+					headers
 				});
 			}
 
@@ -55,15 +61,12 @@ export async function handleRequest(event) {
 				routeMethod.whitelist
 			);
 
-			const encryptedResponseBody = await encryptResponse(responseBody, routeMethod.encryptKeyField);
-
-			// Create new headers object
-			const headers = new Headers();
+			const encryptedResponseBody = await encryptResponse(filteredResponseBody, routeMethod.encryptKeyField);
 
 			// Copy all the original headers from the response into our new headers
-			for (const kv of response.headers.entries()) {
-				headers.append(kv[0], kv[1]);
-			}
+			// for (const kv of response.headers.entries()) {
+			// 	headers.append(kv[0], kv[1]);
+			// }
 
 			// Override the browser TTL with our value
 			headers.set("Cache-Control", "max-age=" + config.browserTTL);
@@ -78,6 +81,7 @@ export async function handleRequest(event) {
 			return new Response(error, {
 				status: 400,
 				statusText: "Bad Request",
+				headers
 			});
 		}
 	} catch (error) {
@@ -85,6 +89,7 @@ export async function handleRequest(event) {
 		return new Response(error, {
 			status: 500,
 			statusText: "Internal Server Error",
+			headers
 		});
 	}
 }
